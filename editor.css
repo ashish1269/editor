@@ -1,0 +1,31 @@
+body {
+    padding: 0;
+    margin: 0;
+    background-color: #2c2c2c;
+}
+
+div.editor-area {
+    max-height: 500px;
+    width:60%;
+    background-color: #3f3f3f;
+    margin: 0 auto;
+    margin-top: 50px; 
+    padding: 20px;
+    overflow-y:scroll;
+}
+
+div.editor-area p {
+    color : #fff;
+    font-size: 20px;
+    font-family: sans-serif;
+    line-height: 20px;
+    min-height: 20px;
+    padding: 5px;
+    margin: 0;
+}
+
+div.editor-area p:focus {
+    border : 0px solid #fff;
+    outline: 0px;
+    background-color: #363636;
+}
