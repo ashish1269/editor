@@ -2,7 +2,7 @@
 
     "use strict";
     
-    var enterKeyLock = false;
+    var enterKeyLock = false, toolTipVisible = false;
     
     /*Register the specified event to a target (element/document/window) and a hadler (callback function) to handle that event*/
     function addEvent(target, event, handler) {
@@ -40,13 +40,17 @@
         }
     }
     
-        
+    function hideToolTip() {
+        var toolTip = document.querySelector('div.tool-tip');
+        toolTip.style.display = 'none';
+    }
+    
     function removeWhenEmpty(event, target) {
         /* If backspace is pressed and there is no content left in the paragraph then set a global variable true, and if once again a backspace (keycode = 8) is hitted then delete the current para and move focus to the upper para's end
         if the active para is topmost in editor area then don't remove it and keep focus in it*/
         if ((event.keyCode || event.which) === 8) {
             if (this.className.indexOf('blank') >= 0) {
-                this.previousSibling.focus();                
+                this.previousSibling.focus();
                 this.parentNode.removeChild(this);
                 
             } else if (this.textContent === "") {
@@ -69,11 +73,25 @@
         referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
     }
     
-    
     function createNewPara(referenceNode) {
         
         var newPara = document.createElement("p");
-        insertAfter(newPara, referenceNode);
+        
+        if (referenceNode) {
+            /*
+            There is already at least one para in editor
+            it will happen on ENTER key press
+            */
+            insertAfter(newPara, referenceNode);
+        } else {
+            /*
+            If there is no para in the editor
+            it'll happen when editor loads for the first time
+            and there is no para in the biginning
+            */
+            document.querySelector('div.editor-area').appendChild(newPara);
+        }
+
         
         newPara.setAttribute('contentEditable', 'true');
         addClass(newPara, 'blank'); /*New para will be blank*/
@@ -84,17 +102,43 @@
         addEvent(newPara, 'keyup', removeWhenEmpty);
         addEvent(newPara, 'focus', makeActivePara);
         addEvent(newPara, 'blur', makeInactivePara);
+        addEvent(newPara, 'mouseup', displaySelectedText);
+        addEvent(newPara, 'mousedown', hideToolTipOnMouseDown);
+    }
+    
+    function hideToolTipOnMouseDown(event, target) {
+        event.stopPropagation();
+        
+        setTimeout(function () {
+            var selectedText = document.all ? document.selection.createRange().text : document.getSelection();
+
+            if(toolTipVisible && selectedText.toString() == "") {
+                document.querySelector('div.tool-tip').style.display = 'none';
+                toolTipVisible = false;
+            }
+        }, 50);        
     }
     
     function monitorSpecialKeys(event, target) {
+        
+        event.stopPropagation();
+        
+        if(toolTipVisible && !(event.keyCode >=37 && event.keyCode <= 40 )) {
+            hideToolTip();
+            console.log('monitorSpecialKeys');
+            toolTipVisible = false;
+        }
         
         /*If enter (keycode = 13) is pressed
         add a new paragraph
         below the current paragraph
         also move focus to the new paragraph
         */
-        
-        if ((event.which || event.keyCode) === 13) {            
+        if(event.shiftKey == true) {
+            setTimeout(displaySelectedText, 200);
+        }
+            
+        if ((event.which || event.keyCode) === 13) {
             event.preventDefault();
             createNewPara(this);
             return;
@@ -103,22 +147,96 @@
         if (this.textContent !== "") {
             removeClass(this, 'blank');
         }
+
+    }
+    
+    function focusLastPara(event, target) {
+        
+         if(toolTipVisible) {
+            hideToolTip();
+             console.log('focusLastPara');
+             toolTipVisible = false;
+        }
+        
+        this.lastElementChild.focus();
+    }
+    
+    function handleSelection(event, target) {
+        event.stopPropagation();
+
+         if(toolTipVisible) {
+            hideToolTip();
+             console.log('focusLastPara');
+             toolTipVisible = false;
+        }
         
     }
 
-    window.onload = function () {
-        var i, firstPara = null, anyPara;
+    function displaySelectedText() {
         
-        firstPara = document.createElement("p");
+        if (toolTipVisible) {
+            return;
+        }
+        var selectedText = document.all ? document.selection.createRange().text : document.getSelection();
         
-        document.querySelector('div.editor-area').appendChild(firstPara);
+        if (selectedText.toString() !== "") {
+            
+            var selectionRectangle, toolTip;
+            
+            selectionRectangle = selectedText.getRangeAt(0).getBoundingClientRect();
+            toolTip = document.querySelector('div.tool-tip');
+            
+            toolTip.style.top = (selectionRectangle.top - 40) + 'px';            
+            toolTip.style.left = (selectionRectangle.left - 5) + 'px';
+            
+            toolTip.style.display = 'block';
+            toolTipVisible = true;
+            
+            return;
+        }
+    }
+    
+    function boldText(event, target) {
+        event.preventDefault();
+        event.stopPropagation();
         
-        addEvent(firstPara, 'keydown', monitorSpecialKeys);
-        addEvent(firstPara, 'focus', makeActivePara);
-        addEvent(firstPara, 'blur', makeInactivePara);
-        firstPara.setAttribute('contentEditable', 'true');
-        firstPara.className += 'blank';
-        firstPara.focus();
+        document.execCommand("bold", false, null);
+    }
+    
+    function italicText(event, target) {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        document.execCommand("italic", false, null);
 
+    }
+    
+    function underlineText(event, target) {
+        event.preventDefault();
+        event.stopPropagation();
+        document.execCommand("underline", false, null);
+    }
+    
+    window.onload = function () {
+        var body, html, editorArea, boldButton, italicButton, underlineButton;
+        
+        body = document.querySelector('body');
+        html = document.querySelector('html');
+        editorArea = document.querySelector('div.editor-area');
+
+        boldButton = document.querySelector('div.tool-tip a.bold');
+        italicButton = document.querySelector('div.tool-tip a.italic');
+        underlineButton = document.querySelector('div.tool-tip a.underline');
+        
+        addEvent(boldButton, 'click', boldText);
+        addEvent(italicButton, 'click', italicText);
+        addEvent(underlineButton, 'click', underlineText);
+        
+        addEvent(editorArea, 'mousedown', focusLastPara);
+        addEvent(body, 'mousedown', hideToolTipOnMouseDown);
+        addEvent(html, 'mousedown', hideToolTipOnMouseDown);
+        
+        createNewPara();
+        
     };
 })(window);
