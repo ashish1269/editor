@@ -235,6 +235,8 @@
         html = document.querySelector('html');
         editorArea = document.querySelector('div.editor-area');
 
+        editorArea.setAttribute('contentEditable', 'true');
+
         boldButton = document.querySelector('div.tool-tip a.bold');
         italicButton = document.querySelector('div.tool-tip a.italic');
         underlineButton = document.querySelector('div.tool-tip a.underline');
