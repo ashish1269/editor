@@ -2,7 +2,7 @@
 
     "use strict";
     
-    var enterKeyLock = false, toolTipVisible = false;
+    var enterKeyLock = false, toolTipVisible = false, charactersInPara = 0;
     
     /*Register the specified event to a target (element/document/window) and a hadler (callback function) to handle that event*/
     function addEvent(target, event, handler) {
@@ -45,16 +45,25 @@
         toolTip.style.display = 'none';
     }
     
+    function getCharactersInPara(element) {
+        return element.textContent.length;
+    }
+    
     function removeWhenEmpty(event, target) {
         /* If backspace is pressed and there is no content left in the paragraph then set a global variable true, and if once again a backspace (keycode = 8) is hitted then delete the current para and move focus to the upper para's end
         if the active para is topmost in editor area then don't remove it and keep focus in it*/
         if ((event.keyCode || event.which) === 8) {
-            if (this.className.indexOf('blank') >= 0) {
-                this.previousSibling.focus();
-                this.parentNode.removeChild(this);
-                
-            } else if (this.textContent === "") {
-                addClass(this, 'blank');
+            if(charactersInPara == getCharactersInPara(this)) {
+                if(this.previousSibling.nodeName.toLowerCase() == "p")
+                {
+                    this.previousSibling.textContent += this.textContent;
+                    this.previousSibling.focus();
+                    this.parentNode.removeChild(this);
+                }
+                return;
+            }
+            else {
+                charactersInPara = getCharactersInPara(this);
             }
         }
         
@@ -63,6 +72,7 @@
 
     function makeActivePara(event, target) {
         addClass(this, 'active');
+        charactersInPara = getCharactersInPara(this);
     }
     
     function makeInactivePara(event, target) {
@@ -141,11 +151,11 @@
         if ((event.which || event.keyCode) === 13) {
             event.preventDefault();
             createNewPara(this);
+            charactersInPara = 0;
             return;
         }
-
-        if (this.textContent !== "") {
-            removeClass(this, 'blank');
+        if((event.which || event.keyCode) != 8) {
+            charactersInPara = getCharactersInPara(this);
         }
 
     }
