@@ -102,18 +102,17 @@
             document.querySelector('div.editor-area').appendChild(newPara);
         }
 
-        
-        newPara.setAttribute('contentEditable', 'true');
-        addClass(newPara, 'blank'); /*New para will be blank*/
-        
-        newPara.focus();
-
         addEvent(newPara, 'keydown', monitorSpecialKeys);
         addEvent(newPara, 'keyup', removeWhenEmpty);
         addEvent(newPara, 'focus', makeActivePara);
         addEvent(newPara, 'blur', makeInactivePara);
         addEvent(newPara, 'mouseup', displaySelectedText);
         addEvent(newPara, 'mousedown', hideToolTipOnMouseDown);
+        
+        newPara.setAttribute('contentEditable', 'true');        
+        /*This below line must be here : after attaching 'focus' event to newPara*/
+        newPara.focus();
+        
     }
     
     function hideToolTipOnMouseDown(event, target) {
