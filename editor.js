@@ -2,6 +2,8 @@
 
     "use strict";
     
+    /* Trying to push to git direct from Brackets editor for the first time */
+
     var enterKeyLock = false, toolTipVisible = false, charactersInPara = 0;
     
     /*Register the specified event to a target (element/document/window) and a hadler (callback function) to handle that event*/
